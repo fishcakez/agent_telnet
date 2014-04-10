@@ -14,6 +14,10 @@ defmodule AgentTelnet do
     :ok = :ranch.stop_listener(__MODULE__)
   end
 
+  def to_map(), do: Core.Sys.update_state(__MODULE__, &( Enum.into(&1, %{}) ))
+
+  def to_hashdict(), do: Core.Sys.update_state(__MODULE__, &( Enum.into(&1, HashDict.new()) ))
+
   ## internal
 
   defp start_listener() do

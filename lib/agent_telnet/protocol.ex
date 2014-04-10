@@ -62,12 +62,15 @@ defmodule AgentTelnet.Protocol do
   end
 
   defp decode_packet(packet) do
-    regex = ~r/^\s*(?|(put)\s+(\w+)\s+(\w+)|(get)\s+(\w+)|(stop))\s*$/
+    regex =
+    ~r/^\s*(?|(put)\s+(\w+)\s+(\w+)|(get)\s+(\w+)|(delete)\s+(\w+)|(stop))\s*$/
     case Regex.run(regex, packet, []) do
       [_, "put", key, value] ->
         { :put, key, value }
       [_, "get", key] ->
         { :get, key }
+      [_, "delete", key] ->
+        { :delete, key }
       [_, "stop"] ->
         :stop
       nil ->
@@ -76,11 +79,15 @@ defmodule AgentTelnet.Protocol do
   end
 
   defp handle_packet({ :put, key, value }, _state) do
-    Agent.update(AgentTelnet, &HashDict.put(&1, key, value))
+    Agent.update(AgentTelnet, &Map.put(&1, key, value))
   end
 
   defp handle_packet({ :get, key }, _state) do
-    { :ok, Agent.get(AgentTelnet, &HashDict.get(&1, key)) }
+    { :ok, Agent.get(AgentTelnet, &Map.get(&1, key)) }
+  end
+
+  defp handle_packet({ :delete, key }, _state) do
+    Agent.update(AgentTelnet, &Map.delete(&1, key))
   end
 
   defp handle_packet(:stop, %{transport: transport, socket: socket}) do
