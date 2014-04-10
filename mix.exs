@@ -8,20 +8,15 @@ defmodule AgentTelnet.Mixfile do
      deps: deps]
   end
 
-  # Configuration for the OTP application
-  #
-  # Type `mix help compile.app` for more information
   def application do
-    [ applications: [],
+    [ applications: [:xgen, :ranch, :core],
       mod: { AgentTelnet, [] } ]
   end
 
-  # List all dependencies in the format:
-  #
-  # { :foobar, git: "https://github.com/elixir-lang/foobar.git", tag: "0.1" }
-  #
-  # Type `mix help deps` for more examples and options
   defp deps do
-    []
+    [{ :xgen, github: "josevalim/xgen" },
+      { :ranch, github: "extend/ranch", ref: "c1d0c4571e" },
+      { :core, github: "fishcakez/core", ref: "900e1c09b4" },
+      { :exrm, github: "bitwalker/exrm", tag: "0.4.2" }]
   end
 end
