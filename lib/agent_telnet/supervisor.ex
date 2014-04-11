@@ -6,7 +6,7 @@ defmodule AgentTelnet.Supervisor do
   end
 
   def init([]) do
-    children = [worker(Agent, [&HashDict.new/0, [local: AgentTelnet]],
+    children = [worker(Agent, [&Map.new/0, [local: AgentTelnet]],
         modules: [AgentTelnet.Protocol])]
     supervise(children, strategy: :one_for_one)
   end

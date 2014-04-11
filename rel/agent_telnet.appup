@@ -1,0 +1,13 @@
+{"0.0.2",
+ [{"0.0.1",
+   [{load_module,'Elixir.AgentTelnet'},
+    {update,'Elixir.AgentTelnet.Supervisor',supervisor},
+    {update,'Elixir.AgentTelnet.Protocol',
+        { advanced, [{agent, { 'Elixir.AgentTelnet.Protocol', to_map, [] }}]}}
+    ]}],
+ [{"0.0.1",
+    [{load_module,'Elixir.AgentTelnet'},
+    {update,'Elixir.AgentTelnet.Supervisor',supervisor},
+    {update,'Elixir.AgentTelnet.Protocol',
+        {advanced, [{agent, {'Elixir.AgentTelnet.Protocol', to_hashdict, []}}]}}
+    ]}]}.

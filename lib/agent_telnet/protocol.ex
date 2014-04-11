@@ -29,6 +29,12 @@ defmodule AgentTelnet.Protocol do
     terminate(state, parent, reason)
   end
 
+  ## appup api
+
+  def to_map(hashdict), do: Enum.into(hashdict, Map.new())
+
+  def to_hashdict(map), do: Enum.into(map, HashDict.new())
+
   ## internal
 
   defp loop(%{transport: transport, socket: socket} = state, parent) do
@@ -62,12 +68,17 @@ defmodule AgentTelnet.Protocol do
   end
 
   defp decode_packet(packet) do
-    regex = ~r/^\s*(?|(put)\s+(\w+)\s+(\w+)|(get)\s+(\w+)|(stop))\s*$/
+    regex =
+    ~r/^\s*(?|(put)\s+(\w+)\s+(\w+)|(get)\s+(\w+)|(delete)\s+(\w+)|(sleep)\s+(\d+)|(stop))\s*$/
     case Regex.run(regex, packet, []) do
       [_, "put", key, value] ->
         { :put, key, value }
       [_, "get", key] ->
         { :get, key }
+      [_, "delete", key] ->
+        { :delete, key }
+      [_, "sleep", timeout] ->
+        { :sleep, binary_to_integer(timeout) }
       [_, "stop"] ->
         :stop
       nil ->
@@ -76,11 +87,20 @@ defmodule AgentTelnet.Protocol do
   end
 
   defp handle_packet({ :put, key, value }, _state) do
-    Agent.update(AgentTelnet, &HashDict.put(&1, key, value))
+    Agent.update(AgentTelnet, &Map.put(&1, key, value))
   end
 
   defp handle_packet({ :get, key }, _state) do
-    { :ok, Agent.get(AgentTelnet, &HashDict.get(&1, key)) }
+    { :ok, Agent.get(AgentTelnet, &Map.get(&1, key)) }
+  end
+
+  defp handle_packet({ :delete, key }, _state) do
+    Agent.update(AgentTelnet, &Map.delete(&1, key))
+  end
+
+  defp handle_packet({ :sleep, timeout }, state) do
+    send_result(:sleep, state)
+    Agent.get_and_update(AgentTelnet, &( { :timer.sleep(timeout), &1 } ))
   end
 
   defp handle_packet(:stop, %{transport: transport, socket: socket}) do
@@ -100,6 +120,7 @@ defmodule AgentTelnet.Protocol do
   defp encode_packet({ :ok, value }), do: [to_string(value), ?\n]
   defp encode_packet({ :error, reason }), do: ["Error: ", inspect(reason), ?\n]
   defp encode_packet({ :stop, reason }), do: ["Closing: ", inspect(reason), ?\n]
+  defp encode_packet(:sleep), do: "sleep..."
 
   defp send_data(data, %{transport: transport, socket: socket}) do
     transport.send(socket, data)
